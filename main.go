@@ -1,7 +1,6 @@
 package main
 
 import (
-	"os"
 	"pair-programming/config"
 	"pair-programming/helpers"
 
