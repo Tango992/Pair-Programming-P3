@@ -43,7 +43,7 @@ func (t TransactionImplementation) GetAll() ([]models.Transaction, error) {
 		return []models.Transaction{}, err
 	}
 	
-	var transactions []models.Transaction
+	transactions := make([]models.Transaction, 0)
 	if err := cursor.All(ctx, &transactions); err != nil {
 		return []models.Transaction{}, err
 	}
@@ -54,54 +54,45 @@ func (t TransactionImplementation) GetAll() ([]models.Transaction, error) {
 func (t TransactionImplementation) GetById(transactionId string) (models.Transaction, error) {
 	objectID, err := primitive.ObjectIDFromHex(transactionId)
 	if err != nil {
-		return models.Transaction{}, nil
+		return models.Transaction{}, err
 	}
-	filter := bson.M{"_id ": objectID}
+
+	filter := bson.M{"_id": objectID}
 
 	var transaction models.Transaction
-
-	
-	err = t.Collection.FindOne(context.TODO(), filter).Decode(&transaction)
-	if err != nil {
-		
+	if err := t.Collection.FindOne(context.TODO(), filter).Decode(&transaction); err != nil {
 		if err == mongo.ErrNoDocuments {
-			
 			return models.Transaction{}, errors.New("transaction not found")
 		}
 		return models.Transaction{}, err
 	}
-
-	
-	return transaction, nil
-	
+	return transaction, nil	
 }
 
 
-
-func (t TransactionImplementation) PutById(transactionId string, updatedTransaction models.Transaction) error {
+func (t TransactionImplementation) PutById(transactionId string, updatedTransaction *models.Transaction) error {
 	objectID, err := primitive.ObjectIDFromHex(transactionId)
 	if err != nil {
 		return err
 	}
 
-		filter := bson.M{"_id": objectID}
+	filter := bson.M{"_id": objectID}
 
-		update := bson.M{"$set": bson.M{
+	update := bson.M{"$set": bson.M{
 		"description": updatedTransaction.Description,
 		"amount":      updatedTransaction.Amount,
-		}}
+	}}
 
-	
 	result, err :=t.Collection.UpdateOne(context.TODO(), filter, update)
 	if err != nil {
-	return err
+		return err
 	}
 
 	if result.ModifiedCount == 0 {
-		
-	return errors.New("no document updated")
+		return errors.New("no document updated")
 	}
 
+	updatedTransaction.Id = objectID
 	return nil
 }
 

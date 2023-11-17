@@ -77,7 +77,7 @@ func (tc TransactionController) GetTransactionById(c echo.Context) error{
 
 	transactions, err := tc.Repository.GetById(id)
 	if err != nil {
-		return c.JSON(http.StatusFound, map[string]string{"error": "transaction not found"})
+		return c.JSON(http.StatusInternalServerError, map[string]string{"error": err.Error()})
 	}
 
 	return c.JSON(http.StatusOK, map[string]interface{}{
@@ -87,8 +87,8 @@ func (tc TransactionController) GetTransactionById(c echo.Context) error{
 }
 
 func (tc TransactionController) UpdateTransactionById(c echo.Context)error{
-	id := c.Param("id")
-
+	id := c.Param("id") 
+	
 	var transaction models.Transaction
 	if err := c.Bind(&transaction); err != nil {
 		return c.JSON(http.StatusBadRequest, map[string]string{"error": "Invalid request payload"})
@@ -98,8 +98,8 @@ func (tc TransactionController) UpdateTransactionById(c echo.Context)error{
 		return echo.NewHTTPError(http.StatusBadRequest, echo.Map{"error": err.Error()})
 	}
 	
-	if err := tc.Repository.PutById(id, transaction); err != nil {
-		return c.JSON(http.StatusFound, map[string]string{"error": "Faild to update transaction"})
+	if err := tc.Repository.PutById(id, &transaction); err != nil {
+		return c.JSON(http.StatusFound, map[string]string{"error": err.Error()})
 	}
 
 	return c.JSON(http.StatusOK, map[string]interface{}{
